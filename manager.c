@@ -16,9 +16,9 @@ void print_menu_p();
 void print_menu_h();
 void check_order(FILE* fp);
 void change_order(FILE* fp);
-void menu_pizza(FILE* fp);
-void menu_chicken(FILE* fp);
-void menu_hamburger(FILE *fp);
+void menu_pizza(FILE* fp, void(*print)());
+void menu_chicken(FILE* fp, void(*print)());
+void menu_hamburger(FILE *fp, void(*print)());
 int main()
 {
 	int n, m;	
@@ -41,13 +41,13 @@ start:
 				switch(n)
 				{
 					case 1:
-						menu_chicken(fp);
+						menu_chicken(fp, print_menu_c);
 						break;
 					case 2:
-						menu_pizza(fp);
+						menu_pizza(fp, print_menu_p);
 						break;
 					case 3:
-						menu_hamburger(fp);
+						menu_hamburger(fp, print_menu_h);
 						break;
 					case 4:
 						goto start;
@@ -72,6 +72,7 @@ Main get_order()
 	Main data;
 	char name[SPACE];
 	int n;
+	FILE *fpn = NULL;
 	printf("무슨 음식을 드시겠습니까?\n");
 	printf("=======================\n");
 	printf("1. 치킨\n2. 피자\n3. 햄버거\n");
@@ -81,59 +82,34 @@ Main get_order()
 	{
 		case 1:
 			print_menu_c();
-			FILE *fpc = NULL;
-			fpc = fopen("chicken.txt", "r");
-			if (fpc == NULL)
+			fpn = fopen("chicken.txt", "r");
+			if (fpn == NULL)
 				fprintf(stderr, "Can not open file\n");
-			printf("주문하실 음식을 입력해주세요 : ");
-			scanf("%s", name);
-			fflush(stdin);
-			fseek(fpc, 0, SEEK_SET);
-			while(!feof(fpc)){
-				fscanf(fpc, "%s %s %s\n", data.place, data.name, data.cost);
-				if(strcmp(data.name, name) == 0){
-					break;
-				}
-			}
-			fflush(stdin);
 			break;
 		case 2:
 			print_menu_p();
-			FILE *fpp = NULL;
-			fpp = fopen("pizza.txt", "r");
-			if (fpp == NULL)
+			fpn = fopen("pizza.txt", "r");
+			if (fpn == NULL)
 				fprintf(stderr, "Can not open file\n");
-			printf("주문하실 음식을 입력해주세요 : ");
-			scanf("%s", name);
-			fflush(stdin);
-			fseek(fpp, 0, SEEK_SET);
-			while(!feof(fpp)){
-				fscanf(fpp, "%s %s %s\n", data.place, data.name, data.cost);
-				if(strcmp(data.name, name) == 0){
-					break;
-				}
-			}
-			fflush(stdin);	
 			break;
 		case 3:
 			print_menu_h();
-			FILE *fph = NULL;
-			fph = fopen("hamburger.txt", "r");
-			if (fph == NULL)
+			fpn = fopen("hamburger.txt", "r");
+			if (fpn == NULL)
 				fprintf(stderr, "Can not open file\n");
-			printf("주문하실 음식을 입력해주세요 : ");
-			scanf("%s", name);
-			fflush(stdin);
-			fseek(fph, 0, SEEK_SET);
-			while(!feof(fph)){
-				fscanf(fph, "%s %s %s\n", data.place, data.name, data.cost);
-				if(strcmp(data.name, name) == 0){
-					break;
-				}
-			}
-			fflush(stdin);
 			break;
 	}
+	printf("주문하실 음식을 입력해주세요 : ");
+	scanf("%s", name);
+	fflush(stdin);
+	fseek(fpn, 0, SEEK_SET);
+	while(!feof(fpn)){
+		fscanf(fpn, "%s %s %s\n", data.place, data.name, data.cost);
+		if(strcmp(data.name, name) == 0){
+			break;
+		}
+	}
+	fflush(stdin);
 	return data;
 }
 int menu()
@@ -194,12 +170,12 @@ void print_menu_h()
 	}
 	fclose(fph);
 }
-void menu_pizza(FILE* fp)
+void menu_pizza(FILE* fp, void(*print)())
 {
 	char name[SPACE];
 	Main data;
 	Main new_data;
-	print_menu_p();
+	print();
 	FILE *fpp = NULL;
 	fpp = fopen("pizza.txt", "r");
 	if (fpp == NULL)
@@ -222,13 +198,13 @@ void menu_pizza(FILE* fp)
 	}
 	fclose(fpp);
 }
-void menu_chicken(FILE* fp)
+void menu_chicken(FILE* fp, void(*print)())
 {
 	char name[SPACE];
 	Main data;
 	Main new_data;
 	FILE *fpc = NULL;
-	print_menu_c();
+	print();
 	fpc = fopen("chicken.txt", "r");
 	if (fpc == NULL)
 		fprintf(stderr, "Can not open file\n");
@@ -250,13 +226,13 @@ void menu_chicken(FILE* fp)
 	}
 	fclose(fpc);
 }
-void menu_hamburger(FILE* fp)
+void menu_hamburger(FILE* fp, void(*print)())
 {
 	char name[SPACE];
 	Main data;
 	Main new_data;
 	FILE *fph = NULL;
-	print_menu_h();
+	print();
 	fph = fopen("hamburger.txt", "r");
 	if (fph == NULL)
 		fprintf(stderr, "Can not open file\n");
@@ -282,8 +258,7 @@ void check_order(FILE* fp)
 {
 	Main order;
 	fseek(fp, 0, SEEK_SET);
-	while(!feof(fp)){
-		fread(&order, sizeof(order), 1, fp);
+	while(fread(&order, sizeof(order), 1, fp)){
 		printf("%s > %s 가격 : %s\n", order.place, order.name, order.cost);			
 	}	
 }
